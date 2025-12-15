@@ -1,0 +1,36 @@
+[project]
+name = "fikenpy"
+version = "0.1.0"
+description = "A modern, type-safe Python library for the Fiken accounting API"
+authors = [
+    { name = "gronnmann", email = "barti.mruk@gmail.com" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.27.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/gronnmann/fikenpy"
+Documentation = "https://github.com/gronnmann/fikenpy#readme"
+Repository = "https://github.com/gronnmann/fikenpy"
+Issues = "https://github.com/gronnmann/fikenpy/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "respx>=0.21.0",
+    "mypy>=1.13.0",
+    "ruff>=0.8.0",
+    "datamodel-code-generator[http]>=0.26.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"

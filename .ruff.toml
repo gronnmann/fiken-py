@@ -1,0 +1,24 @@
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+]
+ignore = []
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Unused imports in __init__.py
+"tests/*" = ["S101"]      # Allow assert in tests
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[lint.isort]
+known-first-party = ["fikenpy"]
