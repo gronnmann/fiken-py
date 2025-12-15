@@ -12,7 +12,7 @@ Use at own risk.
 ## Installation
 
 ```bash
-pip install git+
+pip install git+https://github.com/gronnmann/fiken-py
 ```
 
 ## Quick Start
