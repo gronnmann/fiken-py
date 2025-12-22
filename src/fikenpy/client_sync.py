@@ -128,6 +128,10 @@ class FikenClient:
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))
 
+        # Remove Content-Type header when files are present to let httpx set multipart/form-data
+        if "files" in kwargs and "Content-Type" in headers:
+            headers.pop("Content-Type")
+
         response = self.client.request(
             method=method,
             url=endpoint,
@@ -345,7 +349,9 @@ class FikenClient:
         )
 
     def create_bank_account(
-        self, company_slug: str, data: BankAccountRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: BankAccountRequest,  # noqa: F405
     ) -> BankAccountResult:  # noqa: F405
         """Create a new bank account.
 
@@ -359,7 +365,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/bankAccounts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -449,7 +455,9 @@ class FikenClient:
         )
 
     def create_contact(
-        self, company_slug: str, data: Contact  # noqa: F405
+        self,
+        company_slug: str,
+        data: Contact,  # noqa: F405
     ) -> Contact:  # noqa: F405
         """Create a new contact.
 
@@ -463,7 +471,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/contacts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -487,7 +495,10 @@ class FikenClient:
         return Contact.model_validate(response.json())  # noqa: F405
 
     def update_contact(
-        self, company_slug: str, contact_id: int, data: Contact  # noqa: F405
+        self,
+        company_slug: str,
+        contact_id: int,
+        data: Contact,  # noqa: F405
     ) -> Contact:  # noqa: F405
         """Update a contact.
 
@@ -502,7 +513,7 @@ class FikenClient:
         self._request(
             "PUT",
             f"/companies/{company_slug}/contacts/{contact_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_contact(company_slug, contact_id)
 
@@ -531,7 +542,10 @@ class FikenClient:
             filename: Optional filename override
         """
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
 
         self._request(
             "POST",
@@ -580,7 +594,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/contacts/{contact_id}/contactPerson",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -628,7 +642,7 @@ class FikenClient:
         self._request(
             "PUT",
             f"/companies/{company_slug}/contacts/{contact_id}/contactPerson/{person_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_contact_person(company_slug, contact_id, person_id)
 
@@ -679,7 +693,9 @@ class FikenClient:
         )
 
     def create_product(
-        self, company_slug: str, data: Product  # noqa: F405
+        self,
+        company_slug: str,
+        data: Product,  # noqa: F405
     ) -> Product:  # noqa: F405
         """Create a new product.
 
@@ -693,7 +709,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/products",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -717,7 +733,10 @@ class FikenClient:
         return Product.model_validate(response.json())  # noqa: F405
 
     def update_product(
-        self, company_slug: str, product_id: int, data: Product  # noqa: F405
+        self,
+        company_slug: str,
+        product_id: int,
+        data: Product,  # noqa: F405
     ) -> Product:  # noqa: F405
         """Update a product.
 
@@ -732,7 +751,7 @@ class FikenClient:
         self._request(
             "PUT",
             f"/companies/{company_slug}/products/{product_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_product(company_slug, product_id)
 
@@ -762,7 +781,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/products/salesReport",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return ProductSalesReportResult.model_validate(response.json())  # noqa: F405
 
@@ -798,7 +817,9 @@ class FikenClient:
         )
 
     def create_invoice(
-        self, company_slug: str, data: InvoiceRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: InvoiceRequest,  # noqa: F405
     ) -> InvoiceResult:  # noqa: F405
         """Create a new invoice.
 
@@ -812,7 +833,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/invoices",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -856,7 +877,7 @@ class FikenClient:
         self._request(
             "PATCH",
             f"/companies/{company_slug}/invoices/{invoice_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_invoice(company_slug, invoice_id)
 
@@ -895,7 +916,10 @@ class FikenClient:
             filename: Optional filename override
         """
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
 
         self._request(
             "POST",
@@ -907,7 +931,9 @@ class FikenClient:
             file_obj.close()
 
     def send_invoice(
-        self, company_slug: str, data: SendInvoiceRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: SendInvoiceRequest,  # noqa: F405
     ) -> None:
         """Send an invoice.
 
@@ -918,7 +944,7 @@ class FikenClient:
         self._request(
             "POST",
             f"/companies/{company_slug}/invoices/send",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
 
     # Invoice draft endpoints
@@ -953,7 +979,9 @@ class FikenClient:
         )
 
     def create_invoice_draft(
-        self, company_slug: str, data: InvoiceishDraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: InvoiceishDraftRequest,  # noqa: F405
     ) -> InvoiceishDraftResult:  # noqa: F405
         """Create a new invoice draft.
 
@@ -967,7 +995,7 @@ class FikenClient:
         response = self._request(
             "POST",
             f"/companies/{company_slug}/invoices/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1011,7 +1039,7 @@ class FikenClient:
         self._request(
             "PUT",
             f"/companies/{company_slug}/invoices/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_invoice_draft(company_slug, draft_id)
 
@@ -1067,13 +1095,15 @@ class FikenClient:
         )
 
     def create_sale(
-        self, company_slug: str, data: SaleRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: SaleRequest,  # noqa: F405
     ) -> SaleResult:  # noqa: F405
         """Create a new sale."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/sales",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1110,7 +1140,10 @@ class FikenClient:
     ) -> None:
         """Add an attachment to a sale."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         self._request(
             "POST",
             f"/companies/{company_slug}/sales/{sale_id}/attachments",
@@ -1129,13 +1162,16 @@ class FikenClient:
         return [Payment.model_validate(item) for item in response.json()]  # noqa: F405
 
     def create_sale_payment(
-        self, company_slug: str, sale_id: int, data: Payment  # noqa: F405
+        self,
+        company_slug: str,
+        sale_id: int,
+        data: Payment,  # noqa: F405
     ) -> Payment:  # noqa: F405
         """Create a payment for a sale."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/sales/{sale_id}/payments",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1169,13 +1205,15 @@ class FikenClient:
         )
 
     def create_sale_draft(
-        self, company_slug: str, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Create a new sale draft."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/sales/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1193,13 +1231,16 @@ class FikenClient:
         return DraftResult.model_validate(response.json())  # noqa: F405
 
     def update_sale_draft(
-        self, company_slug: str, draft_id: int, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        draft_id: int,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Update a sale draft."""
         self._request(
             "PUT",
             f"/companies/{company_slug}/sales/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_sale_draft(company_slug, draft_id)
 
@@ -1242,13 +1283,15 @@ class FikenClient:
         )
 
     def create_purchase(
-        self, company_slug: str, data: PurchaseRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: PurchaseRequest,  # noqa: F405
     ) -> PurchaseResult:  # noqa: F405
         """Create a new purchase."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/purchases",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1291,7 +1334,10 @@ class FikenClient:
     ) -> None:
         """Add an attachment to a purchase."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         self._request(
             "POST",
             f"/companies/{company_slug}/purchases/{purchase_id}/attachments",
@@ -1310,13 +1356,16 @@ class FikenClient:
         return [Payment.model_validate(item) for item in response.json()]  # noqa: F405
 
     def create_purchase_payment(
-        self, company_slug: str, purchase_id: int, data: Payment  # noqa: F405
+        self,
+        company_slug: str,
+        purchase_id: int,
+        data: Payment,  # noqa: F405
     ) -> Payment:  # noqa: F405
         """Create a payment for a purchase."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/purchases/{purchase_id}/payments",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1351,13 +1400,15 @@ class FikenClient:
         )
 
     def create_purchase_draft(
-        self, company_slug: str, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Create a new purchase draft."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/purchases/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1375,13 +1426,16 @@ class FikenClient:
         return DraftResult.model_validate(response.json())  # noqa: F405
 
     def update_purchase_draft(
-        self, company_slug: str, draft_id: int, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        draft_id: int,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Update a purchase draft."""
         self._request(
             "PUT",
             f"/companies/{company_slug}/purchases/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_purchase_draft(company_slug, draft_id)
 
@@ -1426,13 +1480,15 @@ class FikenClient:
         )
 
     def create_full_credit_note(
-        self, company_slug: str, data: FullCreditNoteRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: FullCreditNoteRequest,  # noqa: F405
     ) -> CreditNoteResult:  # noqa: F405
         """Create a full credit note."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/full",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1441,13 +1497,15 @@ class FikenClient:
         return CreditNoteResult.model_validate(response.json())  # noqa: F405
 
     def create_partial_credit_note(
-        self, company_slug: str, data: PartialCreditNoteRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: PartialCreditNoteRequest,  # noqa: F405
     ) -> CreditNoteResult:  # noqa: F405
         """Create a partial credit note."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/partial",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1465,13 +1523,15 @@ class FikenClient:
         return CreditNoteResult.model_validate(response.json())  # noqa: F405
 
     def send_credit_note(
-        self, company_slug: str, data: SendCreditNoteRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: SendCreditNoteRequest,  # noqa: F405
     ) -> None:
         """Send a credit note."""
         self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/send",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
 
     def get_credit_note_drafts(
@@ -1491,13 +1551,15 @@ class FikenClient:
         )
 
     def create_credit_note_draft(
-        self, company_slug: str, data: InvoiceishDraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: InvoiceishDraftRequest,  # noqa: F405
     ) -> InvoiceishDraftResult:  # noqa: F405
         """Create a new credit note draft."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1524,7 +1586,7 @@ class FikenClient:
         self._request(
             "PUT",
             f"/companies/{company_slug}/creditNotes/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_credit_note_draft(company_slug, draft_id)
 
@@ -1569,13 +1631,15 @@ class FikenClient:
         )
 
     def create_general_journal_entry(
-        self, company_slug: str, data: GeneralJournalEntryRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: GeneralJournalEntryRequest,  # noqa: F405
     ) -> JournalEntry:  # noqa: F405
         """Create a general journal entry."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/generalJournalEntries",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1612,7 +1676,10 @@ class FikenClient:
     ) -> None:
         """Add an attachment to a journal entry."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         self._request(
             "POST",
             f"/companies/{company_slug}/journalEntries/{entry_id}/attachments",
@@ -1677,13 +1744,15 @@ class FikenClient:
         )
 
     def create_project(
-        self, company_slug: str, data: ProjectRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: ProjectRequest,  # noqa: F405
     ) -> ProjectResult:  # noqa: F405
         """Create a new project."""
         response = self._request(
             "POST",
             f"/companies/{company_slug}/projects",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1710,7 +1779,7 @@ class FikenClient:
         self._request(
             "PATCH",
             f"/companies/{company_slug}/projects/{project_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return self.get_project(company_slug, project_id)
 
@@ -1746,7 +1815,10 @@ class FikenClient:
     ) -> InboxResult:  # noqa: F405
         """Upload a document to inbox."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         response = self._request(
             "POST",
             f"/companies/{company_slug}/inbox",
@@ -1804,458 +1876,520 @@ class ScopedFikenClient:
         self._client = client
         self.company_slug = company_slug
 
-
-    def for_company(self, ) -> ScopedFikenClient:
+    def for_company(
+        self,
+    ) -> ScopedFikenClient:
         """Create a scoped client for a specific company.
 
-Args:
-    company_slug: Company identifier
+        Args:
+            company_slug: Company identifier
 
-Returns:
-    Scoped client with company_slug pre-filled"""
+        Returns:
+            Scoped client with company_slug pre-filled"""
         return self._client.for_company(self.company_slug)
 
-    def get_company(self, ) -> Company:
+    def get_company(
+        self,
+    ) -> Company:
         """Get a specific company.
 
-Args:
-    company_slug: Company identifier
+        Args:
+            company_slug: Company identifier
 
-Returns:
-    Company details"""
+        Returns:
+            Company details"""
         return self._client.get_company(self.company_slug)
 
-    def get_accounts(self, from_account: str | None = None, to_account: str | None = None, page: int = 0, page_size: int = 25) -> PaginatedIterator[Account]:
+    def get_accounts(
+        self,
+        from_account: str | None = None,
+        to_account: str | None = None,
+        page: int = 0,
+        page_size: int = 25,
+    ) -> PaginatedIterator[Account]:
         """Get accounts for a company.
 
-Args:
-    company_slug: Company identifier
-    from_account: Filter by account code range start
-    to_account: Filter by account code range end
-    page: Page number
-    page_size: Items per page
+        Args:
+            company_slug: Company identifier
+            from_account: Filter by account code range start
+            to_account: Filter by account code range end
+            page: Page number
+            page_size: Items per page
 
-Returns:
-    Iterator of accounts"""
-        return self._client.get_accounts(self.company_slug, from_account, to_account, page, page_size)
+        Returns:
+            Iterator of accounts"""
+        return self._client.get_accounts(
+            self.company_slug, from_account, to_account, page, page_size
+        )
 
     def get_account(self, account_code: str) -> Account:
         """Get a specific account.
 
-Args:
-    company_slug: Company identifier
-    account_code: Account code
+        Args:
+            company_slug: Company identifier
+            account_code: Account code
 
-Returns:
-    Account details"""
+        Returns:
+            Account details"""
         return self._client.get_account(self.company_slug, account_code)
 
-    def get_account_balances(self, from_account: str | None = None, to_account: str | None = None, date: date | None = None, page: int = 0, page_size: int = 25) -> PaginatedIterator[AccountBalance]:
+    def get_account_balances(
+        self,
+        from_account: str | None = None,
+        to_account: str | None = None,
+        date: date | None = None,
+        page: int = 0,
+        page_size: int = 25,
+    ) -> PaginatedIterator[AccountBalance]:
         """Get account balances for a company.
 
-Args:
-    company_slug: Company identifier
-    from_account: Filter by account code range start
-    to_account: Filter by account code range end
-    date: Filter by specific date (yyyy-mm-dd)
-    page: Page number
-    page_size: Items per page
+        Args:
+            company_slug: Company identifier
+            from_account: Filter by account code range start
+            to_account: Filter by account code range end
+            date: Filter by specific date (yyyy-mm-dd)
+            page: Page number
+            page_size: Items per page
 
-Returns:
-    Iterator of account balances"""
-        return self._client.get_account_balances(self.company_slug, from_account, to_account, date, page, page_size)
+        Returns:
+            Iterator of account balances"""
+        return self._client.get_account_balances(
+            self.company_slug, from_account, to_account, date, page, page_size
+        )
 
-    def get_account_balance(self, account_code: str, date: date | None = None) -> AccountBalance:
+    def get_account_balance(
+        self, account_code: str, date: date | None = None
+    ) -> AccountBalance:
         """Get balance for a specific account.
 
-Args:
-    company_slug: Company identifier
-    account_code: Account code
-    date: Filter by specific date
+        Args:
+            company_slug: Company identifier
+            account_code: Account code
+            date: Filter by specific date
 
-Returns:
-    Account balance"""
+        Returns:
+            Account balance"""
         return self._client.get_account_balance(self.company_slug, account_code, date)
 
-    def get_bank_accounts(self, inactive: bool | None = None, page: int = 0, page_size: int = 25) -> PaginatedIterator[BankAccountResult]:
+    def get_bank_accounts(
+        self, inactive: bool | None = None, page: int = 0, page_size: int = 25
+    ) -> PaginatedIterator[BankAccountResult]:
         """Get bank accounts for a company.
 
-Args:
-    company_slug: Company identifier
-    inactive: Filter by inactive status
-    page: Page number
-    page_size: Items per page
+        Args:
+            company_slug: Company identifier
+            inactive: Filter by inactive status
+            page: Page number
+            page_size: Items per page
 
-Returns:
-    Iterator of bank accounts"""
-        return self._client.get_bank_accounts(self.company_slug, inactive, page, page_size)
+        Returns:
+            Iterator of bank accounts"""
+        return self._client.get_bank_accounts(
+            self.company_slug, inactive, page, page_size
+        )
 
     def create_bank_account(self, data: BankAccountRequest) -> BankAccountResult:
         """Create a new bank account.
 
-Args:
-    company_slug: Company identifier
-    data: Bank account data
+        Args:
+            company_slug: Company identifier
+            data: Bank account data
 
-Returns:
-    Created bank account"""
+        Returns:
+            Created bank account"""
         return self._client.create_bank_account(self.company_slug, data)
 
     def get_bank_account(self, bank_account_id: int) -> BankAccountResult:
         """Get a specific bank account.
 
-Args:
-    company_slug: Company identifier
-    bank_account_id: Bank account ID
+        Args:
+            company_slug: Company identifier
+            bank_account_id: Bank account ID
 
-Returns:
-    Bank account details"""
+        Returns:
+            Bank account details"""
         return self._client.get_bank_account(self.company_slug, bank_account_id)
 
-    def get_bank_balances(self, date: date | None = None, page: int = 0, page_size: int = 25) -> PaginatedIterator[BankBalanceResult]:
+    def get_bank_balances(
+        self, date: date | None = None, page: int = 0, page_size: int = 25
+    ) -> PaginatedIterator[BankBalanceResult]:
         """Get bank balances for a company.
 
-Args:
-    company_slug: Company identifier
-    date: Filter by specific date
-    page: Page number
-    page_size: Items per page
+        Args:
+            company_slug: Company identifier
+            date: Filter by specific date
+            page: Page number
+            page_size: Items per page
 
-Returns:
-    Iterator of bank balances"""
+        Returns:
+            Iterator of bank balances"""
         return self._client.get_bank_balances(self.company_slug, date, page, page_size)
 
-    def get_contacts(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[Contact]:
+    def get_contacts(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[Contact]:
         """Get contacts for a company.
 
-Args:
-    company_slug: Company identifier
-    page: Page number
-    page_size: Items per page
-    **filters: Additional filters (name, email, customer, supplier, etc.)
+        Args:
+            company_slug: Company identifier
+            page: Page number
+            page_size: Items per page
+            **filters: Additional filters (name, email, customer, supplier, etc.)
 
-Returns:
-    Iterator of contacts"""
+        Returns:
+            Iterator of contacts"""
         return self._client.get_contacts(self.company_slug, page, page_size, **filters)
 
     def create_contact(self, data: Contact) -> Contact:
         """Create a new contact.
 
-Args:
-    company_slug: Company identifier
-    data: Contact data
+        Args:
+            company_slug: Company identifier
+            data: Contact data
 
-Returns:
-    Created contact"""
+        Returns:
+            Created contact"""
         return self._client.create_contact(self.company_slug, data)
 
     def get_contact(self, contact_id: int) -> Contact:
         """Get a specific contact.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
 
-Returns:
-    Contact details"""
+        Returns:
+            Contact details"""
         return self._client.get_contact(self.company_slug, contact_id)
 
     def update_contact(self, contact_id: int, data: Contact) -> Contact:
         """Update a contact.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
-    data: Updated contact data
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
+            data: Updated contact data
 
-Returns:
-    Updated contact"""
+        Returns:
+            Updated contact"""
         return self._client.update_contact(self.company_slug, contact_id, data)
 
     def delete_contact(self, contact_id: int) -> None:
         """Delete a contact.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID"""
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID"""
         return self._client.delete_contact(self.company_slug, contact_id)
 
-    def add_attachment_to_contact(self, contact_id: int, file: Path | str | BinaryIO, filename: str | None = None) -> None:
+    def add_attachment_to_contact(
+        self, contact_id: int, file: Path | str | BinaryIO, filename: str | None = None
+    ) -> None:
         """Add an attachment to a contact.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
-    file: File to attach
-    filename: Optional filename override"""
-        return self._client.add_attachment_to_contact(self.company_slug, contact_id, file, filename)
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
+            file: File to attach
+            filename: Optional filename override"""
+        return self._client.add_attachment_to_contact(
+            self.company_slug, contact_id, file, filename
+        )
 
     def get_contact_persons(self, contact_id: int) -> list[ContactPerson]:
         """Get contact persons for a contact.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
 
-Returns:
-    List of contact persons"""
+        Returns:
+            List of contact persons"""
         return self._client.get_contact_persons(self.company_slug, contact_id)
 
     def add_contact_person(self, contact_id: int, data: ContactPerson) -> ContactPerson:
         """Add a contact person to a contact.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
-    data: Contact person data
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
+            data: Contact person data
 
-Returns:
-    Created contact person"""
+        Returns:
+            Created contact person"""
         return self._client.add_contact_person(self.company_slug, contact_id, data)
 
     def get_contact_person(self, contact_id: int, person_id: int) -> ContactPerson:
         """Get a specific contact person.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
-    person_id: Contact person ID
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
+            person_id: Contact person ID
 
-Returns:
-    Contact person details"""
+        Returns:
+            Contact person details"""
         return self._client.get_contact_person(self.company_slug, contact_id, person_id)
 
-    def update_contact_person(self, contact_id: int, person_id: int, data: ContactPerson) -> ContactPerson:
+    def update_contact_person(
+        self, contact_id: int, person_id: int, data: ContactPerson
+    ) -> ContactPerson:
         """Update a contact person.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
-    person_id: Contact person ID
-    data: Updated contact person data
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
+            person_id: Contact person ID
+            data: Updated contact person data
 
-Returns:
-    Updated contact person"""
-        return self._client.update_contact_person(self.company_slug, contact_id, person_id, data)
+        Returns:
+            Updated contact person"""
+        return self._client.update_contact_person(
+            self.company_slug, contact_id, person_id, data
+        )
 
     def delete_contact_person(self, contact_id: int, person_id: int) -> None:
         """Delete a contact person.
 
-Args:
-    company_slug: Company identifier
-    contact_id: Contact ID
-    person_id: Contact person ID"""
-        return self._client.delete_contact_person(self.company_slug, contact_id, person_id)
+        Args:
+            company_slug: Company identifier
+            contact_id: Contact ID
+            person_id: Contact person ID"""
+        return self._client.delete_contact_person(
+            self.company_slug, contact_id, person_id
+        )
 
-    def get_products(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[Product]:
+    def get_products(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[Product]:
         """Get products for a company.
 
-Args:
-    company_slug: Company identifier
-    page: Page number
-    page_size: Items per page
-    **filters: Additional filters (name, productNumber, active, etc.)
+        Args:
+            company_slug: Company identifier
+            page: Page number
+            page_size: Items per page
+            **filters: Additional filters (name, productNumber, active, etc.)
 
-Returns:
-    Iterator of products"""
+        Returns:
+            Iterator of products"""
         return self._client.get_products(self.company_slug, page, page_size, **filters)
 
     def create_product(self, data: Product) -> Product:
         """Create a new product.
 
-Args:
-    company_slug: Company identifier
-    data: Product data
+        Args:
+            company_slug: Company identifier
+            data: Product data
 
-Returns:
-    Created product"""
+        Returns:
+            Created product"""
         return self._client.create_product(self.company_slug, data)
 
     def get_product(self, product_id: int) -> Product:
         """Get a specific product.
 
-Args:
-    company_slug: Company identifier
-    product_id: Product ID
+        Args:
+            company_slug: Company identifier
+            product_id: Product ID
 
-Returns:
-    Product details"""
+        Returns:
+            Product details"""
         return self._client.get_product(self.company_slug, product_id)
 
     def update_product(self, product_id: int, data: Product) -> Product:
         """Update a product.
 
-Args:
-    company_slug: Company identifier
-    product_id: Product ID
-    data: Updated product data
+        Args:
+            company_slug: Company identifier
+            product_id: Product ID
+            data: Updated product data
 
-Returns:
-    Updated product"""
+        Returns:
+            Updated product"""
         return self._client.update_product(self.company_slug, product_id, data)
 
     def delete_product(self, product_id: int) -> None:
         """Delete a product.
 
-Args:
-    company_slug: Company identifier
-    product_id: Product ID"""
+        Args:
+            company_slug: Company identifier
+            product_id: Product ID"""
         return self._client.delete_product(self.company_slug, product_id)
 
-    def create_product_sales_report(self, data: ProductSalesReportRequest) -> ProductSalesReportResult:
+    def create_product_sales_report(
+        self, data: ProductSalesReportRequest
+    ) -> ProductSalesReportResult:
         """Create a product sales report.
 
-Args:
-    company_slug: Company identifier
-    data: Report request data
+        Args:
+            company_slug: Company identifier
+            data: Report request data
 
-Returns:
-    Sales report result"""
+        Returns:
+            Sales report result"""
         return self._client.create_product_sales_report(self.company_slug, data)
 
-    def get_invoices(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[InvoiceResult]:
+    def get_invoices(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[InvoiceResult]:
         """Get invoices for a company.
 
-Args:
-    company_slug: Company identifier
-    page: Page number
-    page_size: Items per page
-    **filters: Additional filters (issueDate, customerId, settled, etc.)
+        Args:
+            company_slug: Company identifier
+            page: Page number
+            page_size: Items per page
+            **filters: Additional filters (issueDate, customerId, settled, etc.)
 
-Returns:
-    Iterator of invoices"""
+        Returns:
+            Iterator of invoices"""
         return self._client.get_invoices(self.company_slug, page, page_size, **filters)
 
     def create_invoice(self, data: InvoiceRequest) -> InvoiceResult:
         """Create a new invoice.
 
-Args:
-    company_slug: Company identifier
-    data: Invoice data
+        Args:
+            company_slug: Company identifier
+            data: Invoice data
 
-Returns:
-    Created invoice"""
+        Returns:
+            Created invoice"""
         return self._client.create_invoice(self.company_slug, data)
 
     def get_invoice(self, invoice_id: int) -> InvoiceResult:
         """Get a specific invoice.
 
-Args:
-    company_slug: Company identifier
-    invoice_id: Invoice ID
+        Args:
+            company_slug: Company identifier
+            invoice_id: Invoice ID
 
-Returns:
-    Invoice details"""
+        Returns:
+            Invoice details"""
         return self._client.get_invoice(self.company_slug, invoice_id)
 
-    def update_invoice(self, invoice_id: int, data: UpdateInvoiceRequest) -> InvoiceResult:
+    def update_invoice(
+        self, invoice_id: int, data: UpdateInvoiceRequest
+    ) -> InvoiceResult:
         """Update an invoice.
 
-Args:
-    company_slug: Company identifier
-    invoice_id: Invoice ID
-    data: Update data
+        Args:
+            company_slug: Company identifier
+            invoice_id: Invoice ID
+            data: Update data
 
-Returns:
-    Updated invoice"""
+        Returns:
+            Updated invoice"""
         return self._client.update_invoice(self.company_slug, invoice_id, data)
 
     def get_invoice_attachments(self, invoice_id: int) -> list[Attachment]:
         """Get attachments for an invoice.
 
-Args:
-    company_slug: Company identifier
-    invoice_id: Invoice ID
+        Args:
+            company_slug: Company identifier
+            invoice_id: Invoice ID
 
-Returns:
-    List of attachments"""
+        Returns:
+            List of attachments"""
         return self._client.get_invoice_attachments(self.company_slug, invoice_id)
 
-    def add_attachment_to_invoice(self, invoice_id: int, file: Path | str | BinaryIO, filename: str | None = None) -> None:
+    def add_attachment_to_invoice(
+        self, invoice_id: int, file: Path | str | BinaryIO, filename: str | None = None
+    ) -> None:
         """Add an attachment to an invoice.
 
-Args:
-    company_slug: Company identifier
-    invoice_id: Invoice ID
-    file: File to attach
-    filename: Optional filename override"""
-        return self._client.add_attachment_to_invoice(self.company_slug, invoice_id, file, filename)
+        Args:
+            company_slug: Company identifier
+            invoice_id: Invoice ID
+            file: File to attach
+            filename: Optional filename override"""
+        return self._client.add_attachment_to_invoice(
+            self.company_slug, invoice_id, file, filename
+        )
 
     def send_invoice(self, data: SendInvoiceRequest) -> None:
         """Send an invoice.
 
-Args:
-    company_slug: Company identifier
-    data: Send invoice request data"""
+        Args:
+            company_slug: Company identifier
+            data: Send invoice request data"""
         return self._client.send_invoice(self.company_slug, data)
 
-    def get_invoice_drafts(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[InvoiceishDraftResult]:
+    def get_invoice_drafts(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[InvoiceishDraftResult]:
         """Get invoice drafts for a company.
 
-Args:
-    company_slug: Company identifier
-    page: Page number
-    page_size: Items per page
-    **filters: Additional filters
+        Args:
+            company_slug: Company identifier
+            page: Page number
+            page_size: Items per page
+            **filters: Additional filters
 
-Returns:
-    Iterator of invoice drafts"""
-        return self._client.get_invoice_drafts(self.company_slug, page, page_size, **filters)
+        Returns:
+            Iterator of invoice drafts"""
+        return self._client.get_invoice_drafts(
+            self.company_slug, page, page_size, **filters
+        )
 
-    def create_invoice_draft(self, data: InvoiceishDraftRequest) -> InvoiceishDraftResult:
+    def create_invoice_draft(
+        self, data: InvoiceishDraftRequest
+    ) -> InvoiceishDraftResult:
         """Create a new invoice draft.
 
-Args:
-    company_slug: Company identifier
-    data: Invoice draft data
+        Args:
+            company_slug: Company identifier
+            data: Invoice draft data
 
-Returns:
-    Created invoice draft"""
+        Returns:
+            Created invoice draft"""
         return self._client.create_invoice_draft(self.company_slug, data)
 
     def get_invoice_draft(self, draft_id: int) -> InvoiceishDraftResult:
         """Get a specific invoice draft.
 
-Args:
-    company_slug: Company identifier
-    draft_id: Draft ID
+        Args:
+            company_slug: Company identifier
+            draft_id: Draft ID
 
-Returns:
-    Invoice draft details"""
+        Returns:
+            Invoice draft details"""
         return self._client.get_invoice_draft(self.company_slug, draft_id)
 
-    def update_invoice_draft(self, draft_id: int, data: InvoiceishDraftRequest) -> InvoiceishDraftResult:
+    def update_invoice_draft(
+        self, draft_id: int, data: InvoiceishDraftRequest
+    ) -> InvoiceishDraftResult:
         """Update an invoice draft.
 
-Args:
-    company_slug: Company identifier
-    draft_id: Draft ID
-    data: Updated draft data
+        Args:
+            company_slug: Company identifier
+            draft_id: Draft ID
+            data: Updated draft data
 
-Returns:
-    Updated invoice draft"""
+        Returns:
+            Updated invoice draft"""
         return self._client.update_invoice_draft(self.company_slug, draft_id, data)
 
     def delete_invoice_draft(self, draft_id: int) -> None:
         """Delete an invoice draft.
 
-Args:
-    company_slug: Company identifier
-    draft_id: Draft ID"""
+        Args:
+            company_slug: Company identifier
+            draft_id: Draft ID"""
         return self._client.delete_invoice_draft(self.company_slug, draft_id)
 
     def create_invoice_from_draft(self, draft_id: int) -> InvoiceResult:
         """Create an invoice from a draft.
 
-Args:
-    company_slug: Company identifier
-    draft_id: Draft ID
+        Args:
+            company_slug: Company identifier
+            draft_id: Draft ID
 
-Returns:
-    Created invoice"""
+        Returns:
+            Created invoice"""
         return self._client.create_invoice_from_draft(self.company_slug, draft_id)
 
-    def get_sales(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[SaleResult]:
+    def get_sales(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[SaleResult]:
         """Get sales for a company."""
         return self._client.get_sales(self.company_slug, page, page_size, **filters)
 
@@ -2275,9 +2409,13 @@ Returns:
         """Get attachments for a sale."""
         return self._client.get_sale_attachments(self.company_slug, sale_id)
 
-    def add_attachment_to_sale(self, sale_id: int, file: Path | str | BinaryIO, filename: str | None = None) -> None:
+    def add_attachment_to_sale(
+        self, sale_id: int, file: Path | str | BinaryIO, filename: str | None = None
+    ) -> None:
         """Add an attachment to a sale."""
-        return self._client.add_attachment_to_sale(self.company_slug, sale_id, file, filename)
+        return self._client.add_attachment_to_sale(
+            self.company_slug, sale_id, file, filename
+        )
 
     def get_sale_payments(self, sale_id: int) -> list[Payment]:
         """Get payments for a sale."""
@@ -2291,7 +2429,9 @@ Returns:
         """Get a specific sale payment."""
         return self._client.get_sale_payment(self.company_slug, sale_id, payment_id)
 
-    def get_sale_drafts(self, page: int = 0, page_size: int = 25) -> PaginatedIterator[DraftResult]:
+    def get_sale_drafts(
+        self, page: int = 0, page_size: int = 25
+    ) -> PaginatedIterator[DraftResult]:
         """Get sale drafts for a company."""
         return self._client.get_sale_drafts(self.company_slug, page, page_size)
 
@@ -2315,7 +2455,9 @@ Returns:
         """Create a sale from a draft."""
         return self._client.create_sale_from_draft(self.company_slug, draft_id)
 
-    def get_purchases(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[PurchaseResult]:
+    def get_purchases(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[PurchaseResult]:
         """Get purchases for a company."""
         return self._client.get_purchases(self.company_slug, page, page_size, **filters)
 
@@ -2335,9 +2477,13 @@ Returns:
         """Get attachments for a purchase."""
         return self._client.get_purchase_attachments(self.company_slug, purchase_id)
 
-    def add_attachment_to_purchase(self, purchase_id: int, file: Path | str | BinaryIO, filename: str | None = None) -> None:
+    def add_attachment_to_purchase(
+        self, purchase_id: int, file: Path | str | BinaryIO, filename: str | None = None
+    ) -> None:
         """Add an attachment to a purchase."""
-        return self._client.add_attachment_to_purchase(self.company_slug, purchase_id, file, filename)
+        return self._client.add_attachment_to_purchase(
+            self.company_slug, purchase_id, file, filename
+        )
 
     def get_purchase_payments(self, purchase_id: int) -> list[Payment]:
         """Get payments for a purchase."""
@@ -2345,13 +2491,19 @@ Returns:
 
     def create_purchase_payment(self, purchase_id: int, data: Payment) -> Payment:
         """Create a payment for a purchase."""
-        return self._client.create_purchase_payment(self.company_slug, purchase_id, data)
+        return self._client.create_purchase_payment(
+            self.company_slug, purchase_id, data
+        )
 
     def get_purchase_payment(self, purchase_id: int, payment_id: int) -> Payment:
         """Get a specific purchase payment."""
-        return self._client.get_purchase_payment(self.company_slug, purchase_id, payment_id)
+        return self._client.get_purchase_payment(
+            self.company_slug, purchase_id, payment_id
+        )
 
-    def get_purchase_drafts(self, page: int = 0, page_size: int = 25) -> PaginatedIterator[DraftResult]:
+    def get_purchase_drafts(
+        self, page: int = 0, page_size: int = 25
+    ) -> PaginatedIterator[DraftResult]:
         """Get purchase drafts for a company."""
         return self._client.get_purchase_drafts(self.company_slug, page, page_size)
 
@@ -2375,15 +2527,21 @@ Returns:
         """Create a purchase from a draft."""
         return self._client.create_purchase_from_draft(self.company_slug, draft_id)
 
-    def get_credit_notes(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[CreditNoteResult]:
+    def get_credit_notes(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[CreditNoteResult]:
         """Get credit notes for a company."""
-        return self._client.get_credit_notes(self.company_slug, page, page_size, **filters)
+        return self._client.get_credit_notes(
+            self.company_slug, page, page_size, **filters
+        )
 
     def create_full_credit_note(self, data: FullCreditNoteRequest) -> CreditNoteResult:
         """Create a full credit note."""
         return self._client.create_full_credit_note(self.company_slug, data)
 
-    def create_partial_credit_note(self, data: PartialCreditNoteRequest) -> CreditNoteResult:
+    def create_partial_credit_note(
+        self, data: PartialCreditNoteRequest
+    ) -> CreditNoteResult:
         """Create a partial credit note."""
         return self._client.create_partial_credit_note(self.company_slug, data)
 
@@ -2395,11 +2553,15 @@ Returns:
         """Send a credit note."""
         return self._client.send_credit_note(self.company_slug, data)
 
-    def get_credit_note_drafts(self, page: int = 0, page_size: int = 25) -> PaginatedIterator[InvoiceishDraftResult]:
+    def get_credit_note_drafts(
+        self, page: int = 0, page_size: int = 25
+    ) -> PaginatedIterator[InvoiceishDraftResult]:
         """Get credit note drafts for a company."""
         return self._client.get_credit_note_drafts(self.company_slug, page, page_size)
 
-    def create_credit_note_draft(self, data: InvoiceishDraftRequest) -> InvoiceishDraftResult:
+    def create_credit_note_draft(
+        self, data: InvoiceishDraftRequest
+    ) -> InvoiceishDraftResult:
         """Create a new credit note draft."""
         return self._client.create_credit_note_draft(self.company_slug, data)
 
@@ -2407,7 +2569,9 @@ Returns:
         """Get a specific credit note draft."""
         return self._client.get_credit_note_draft(self.company_slug, draft_id)
 
-    def update_credit_note_draft(self, draft_id: int, data: InvoiceishDraftRequest) -> InvoiceishDraftResult:
+    def update_credit_note_draft(
+        self, draft_id: int, data: InvoiceishDraftRequest
+    ) -> InvoiceishDraftResult:
         """Update a credit note draft."""
         return self._client.update_credit_note_draft(self.company_slug, draft_id, data)
 
@@ -2419,11 +2583,17 @@ Returns:
         """Create a credit note from a draft."""
         return self._client.create_credit_note_from_draft(self.company_slug, draft_id)
 
-    def get_journal_entries(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[JournalEntry]:
+    def get_journal_entries(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[JournalEntry]:
         """Get journal entries for a company."""
-        return self._client.get_journal_entries(self.company_slug, page, page_size, **filters)
+        return self._client.get_journal_entries(
+            self.company_slug, page, page_size, **filters
+        )
 
-    def create_general_journal_entry(self, data: GeneralJournalEntryRequest) -> JournalEntry:
+    def create_general_journal_entry(
+        self, data: GeneralJournalEntryRequest
+    ) -> JournalEntry:
         """Create a general journal entry."""
         return self._client.create_general_journal_entry(self.company_slug, data)
 
@@ -2435,13 +2605,21 @@ Returns:
         """Get attachments for a journal entry."""
         return self._client.get_journal_entry_attachments(self.company_slug, entry_id)
 
-    def add_attachment_to_journal_entry(self, entry_id: int, file: Path | str | BinaryIO, filename: str | None = None) -> None:
+    def add_attachment_to_journal_entry(
+        self, entry_id: int, file: Path | str | BinaryIO, filename: str | None = None
+    ) -> None:
         """Add an attachment to a journal entry."""
-        return self._client.add_attachment_to_journal_entry(self.company_slug, entry_id, file, filename)
+        return self._client.add_attachment_to_journal_entry(
+            self.company_slug, entry_id, file, filename
+        )
 
-    def get_transactions(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[Transaction]:
+    def get_transactions(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[Transaction]:
         """Get transactions for a company."""
-        return self._client.get_transactions(self.company_slug, page, page_size, **filters)
+        return self._client.get_transactions(
+            self.company_slug, page, page_size, **filters
+        )
 
     def get_transaction(self, transaction_id: int) -> Transaction:
         """Get a specific transaction."""
@@ -2451,7 +2629,9 @@ Returns:
         """Delete a transaction."""
         return self._client.delete_transaction(self.company_slug, transaction_id)
 
-    def get_projects(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[ProjectResult]:
+    def get_projects(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[ProjectResult]:
         """Get projects for a company."""
         return self._client.get_projects(self.company_slug, page, page_size, **filters)
 
@@ -2463,7 +2643,9 @@ Returns:
         """Get a specific project."""
         return self._client.get_project(self.company_slug, project_id)
 
-    def update_project(self, project_id: int, data: UpdateProjectRequest) -> ProjectResult:
+    def update_project(
+        self, project_id: int, data: UpdateProjectRequest
+    ) -> ProjectResult:
         """Update a project."""
         return self._client.update_project(self.company_slug, project_id, data)
 
@@ -2471,11 +2653,15 @@ Returns:
         """Delete a project."""
         return self._client.delete_project(self.company_slug, project_id)
 
-    def get_inbox(self, page: int = 0, page_size: int = 25, **filters: Any) -> PaginatedIterator[InboxResult]:
+    def get_inbox(
+        self, page: int = 0, page_size: int = 25, **filters: Any
+    ) -> PaginatedIterator[InboxResult]:
         """Get inbox documents for a company."""
         return self._client.get_inbox(self.company_slug, page, page_size, **filters)
 
-    def create_inbox_document(self, file: Path | str | BinaryIO, filename: str | None = None) -> InboxResult:
+    def create_inbox_document(
+        self, file: Path | str | BinaryIO, filename: str | None = None
+    ) -> InboxResult:
         """Upload a document to inbox."""
         return self._client.create_inbox_document(self.company_slug, file, filename)
 
@@ -2486,4 +2672,3 @@ Returns:
     def get_groups(self, page: int = 0, page_size: int = 25) -> Any:
         """Get customer groups for a company."""
         return self._client.get_groups(self.company_slug, page, page_size)
-

@@ -9,16 +9,14 @@ from typing import Any, BinaryIO
 import httpx
 
 from fikenpy._version import __version__
-from fikenpy.auth import AsyncOAuth2Handler, AsyncRateLimiter, TokenAuth
+from fikenpy.auth import AsyncOAuth2Handler, AsyncRateLimiter, OAuth2Handler, TokenAuth
 from fikenpy.client_base import (
-    ClientConfig,
     AsyncPaginatedIterator,
+    ClientConfig,
     parse_error_response,
     prepare_attachment,
 )
 from fikenpy.models import *  # noqa: F403
-
-from fikenpy.auth import OAuth2Handler
 
 
 class AsyncFikenClient:
@@ -130,6 +128,10 @@ class AsyncFikenClient:
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))
 
+        # Remove Content-Type header when files are present to let httpx set multipart/form-data
+        if "files" in kwargs and "Content-Type" in headers:
+            headers.pop("Content-Type")
+
         response = await self.client.request(
             method=method,
             url=endpoint,
@@ -138,7 +140,6 @@ class AsyncFikenClient:
         )
 
         if response.status_code >= 400:
-            print(response.request.__dict__)
             raise parse_error_response(response)
 
         return response
@@ -348,7 +349,9 @@ class AsyncFikenClient:
         )
 
     async def create_bank_account(
-        self, company_slug: str, data: BankAccountRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: BankAccountRequest,  # noqa: F405
     ) -> BankAccountResult:  # noqa: F405
         """Create a new bank account.
 
@@ -362,7 +365,7 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/bankAccounts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -452,7 +455,9 @@ class AsyncFikenClient:
         )
 
     async def create_contact(
-        self, company_slug: str, data: Contact  # noqa: F405
+        self,
+        company_slug: str,
+        data: Contact,  # noqa: F405
     ) -> Contact:  # noqa: F405
         """Create a new contact.
 
@@ -466,7 +471,7 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/contacts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -492,7 +497,10 @@ class AsyncFikenClient:
         return Contact.model_validate(response.json())  # noqa: F405
 
     async def update_contact(
-        self, company_slug: str, contact_id: int, data: Contact  # noqa: F405
+        self,
+        company_slug: str,
+        contact_id: int,
+        data: Contact,  # noqa: F405
     ) -> Contact:  # noqa: F405
         """Update a contact.
 
@@ -507,7 +515,7 @@ class AsyncFikenClient:
         await self._request(
             "PUT",
             f"/companies/{company_slug}/contacts/{contact_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_contact(company_slug, contact_id)
 
@@ -538,7 +546,10 @@ class AsyncFikenClient:
             filename: Optional filename override
         """
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
 
         await self._request(
             "POST",
@@ -587,12 +598,14 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/contacts/{contact_id}/contactPerson",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
             person_id = location.split("/")[-1]
-            return await self.get_contact_person(company_slug, contact_id, int(person_id))
+            return await self.get_contact_person(
+                company_slug, contact_id, int(person_id)
+            )
         return ContactPerson.model_validate(response.json())  # noqa: F405
 
     async def get_contact_person(
@@ -635,7 +648,7 @@ class AsyncFikenClient:
         await self._request(
             "PUT",
             f"/companies/{company_slug}/contacts/{contact_id}/contactPerson/{person_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_contact_person(company_slug, contact_id, person_id)
 
@@ -686,7 +699,9 @@ class AsyncFikenClient:
         )
 
     async def create_product(
-        self, company_slug: str, data: Product  # noqa: F405
+        self,
+        company_slug: str,
+        data: Product,  # noqa: F405
     ) -> Product:  # noqa: F405
         """Create a new product.
 
@@ -700,7 +715,7 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/products",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -726,7 +741,10 @@ class AsyncFikenClient:
         return Product.model_validate(response.json())  # noqa: F405
 
     async def update_product(
-        self, company_slug: str, product_id: int, data: Product  # noqa: F405
+        self,
+        company_slug: str,
+        product_id: int,
+        data: Product,  # noqa: F405
     ) -> Product:  # noqa: F405
         """Update a product.
 
@@ -741,7 +759,7 @@ class AsyncFikenClient:
         await self._request(
             "PUT",
             f"/companies/{company_slug}/products/{product_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_product(company_slug, product_id)
 
@@ -773,7 +791,7 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/products/salesReport",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return ProductSalesReportResult.model_validate(response.json())  # noqa: F405
 
@@ -809,7 +827,9 @@ class AsyncFikenClient:
         )
 
     async def create_invoice(
-        self, company_slug: str, data: InvoiceRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: InvoiceRequest,  # noqa: F405
     ) -> InvoiceResult:  # noqa: F405
         """Create a new invoice.
 
@@ -823,7 +843,7 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/invoices",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -867,7 +887,7 @@ class AsyncFikenClient:
         await self._request(
             "PATCH",
             f"/companies/{company_slug}/invoices/{invoice_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_invoice(company_slug, invoice_id)
 
@@ -906,7 +926,10 @@ class AsyncFikenClient:
             filename: Optional filename override
         """
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
 
         await self._request(
             "POST",
@@ -918,7 +941,9 @@ class AsyncFikenClient:
             file_obj.close()
 
     async def send_invoice(
-        self, company_slug: str, data: SendInvoiceRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: SendInvoiceRequest,  # noqa: F405
     ) -> None:
         """Send an invoice.
 
@@ -929,7 +954,7 @@ class AsyncFikenClient:
         await self._request(
             "POST",
             f"/companies/{company_slug}/invoices/send",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
 
     # Invoice draft endpoints
@@ -964,7 +989,9 @@ class AsyncFikenClient:
         )
 
     async def create_invoice_draft(
-        self, company_slug: str, data: InvoiceishDraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: InvoiceishDraftRequest,  # noqa: F405
     ) -> InvoiceishDraftResult:  # noqa: F405
         """Create a new invoice draft.
 
@@ -978,7 +1005,7 @@ class AsyncFikenClient:
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/invoices/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1022,7 +1049,7 @@ class AsyncFikenClient:
         await self._request(
             "PUT",
             f"/companies/{company_slug}/invoices/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_invoice_draft(company_slug, draft_id)
 
@@ -1080,13 +1107,15 @@ class AsyncFikenClient:
         )
 
     async def create_sale(
-        self, company_slug: str, data: SaleRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: SaleRequest,  # noqa: F405
     ) -> SaleResult:  # noqa: F405
         """Create a new sale."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/sales",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1129,7 +1158,10 @@ class AsyncFikenClient:
     ) -> None:
         """Add an attachment to a sale."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         await self._request(
             "POST",
             f"/companies/{company_slug}/sales/{sale_id}/attachments",
@@ -1148,13 +1180,16 @@ class AsyncFikenClient:
         return [Payment.model_validate(item) for item in response.json()]  # noqa: F405
 
     async def create_sale_payment(
-        self, company_slug: str, sale_id: int, data: Payment  # noqa: F405
+        self,
+        company_slug: str,
+        sale_id: int,
+        data: Payment,  # noqa: F405
     ) -> Payment:  # noqa: F405
         """Create a payment for a sale."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/sales/{sale_id}/payments",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1188,13 +1223,15 @@ class AsyncFikenClient:
         )
 
     async def create_sale_draft(
-        self, company_slug: str, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Create a new sale draft."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/sales/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1212,13 +1249,16 @@ class AsyncFikenClient:
         return DraftResult.model_validate(response.json())  # noqa: F405
 
     async def update_sale_draft(
-        self, company_slug: str, draft_id: int, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        draft_id: int,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Update a sale draft."""
         await self._request(
             "PUT",
             f"/companies/{company_slug}/sales/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_sale_draft(company_slug, draft_id)
 
@@ -1263,13 +1303,15 @@ class AsyncFikenClient:
         )
 
     async def create_purchase(
-        self, company_slug: str, data: PurchaseRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: PurchaseRequest,  # noqa: F405
     ) -> PurchaseResult:  # noqa: F405
         """Create a new purchase."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/purchases",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1312,7 +1354,10 @@ class AsyncFikenClient:
     ) -> None:
         """Add an attachment to a purchase."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         await self._request(
             "POST",
             f"/companies/{company_slug}/purchases/{purchase_id}/attachments",
@@ -1331,18 +1376,23 @@ class AsyncFikenClient:
         return [Payment.model_validate(item) for item in response.json()]  # noqa: F405
 
     async def create_purchase_payment(
-        self, company_slug: str, purchase_id: int, data: Payment  # noqa: F405
+        self,
+        company_slug: str,
+        purchase_id: int,
+        data: Payment,  # noqa: F405
     ) -> Payment:  # noqa: F405
         """Create a payment for a purchase."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/purchases/{purchase_id}/payments",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
             payment_id = location.split("/")[-1]
-            return await self.get_purchase_payment(company_slug, purchase_id, int(payment_id))
+            return await self.get_purchase_payment(
+                company_slug, purchase_id, int(payment_id)
+            )
         return Payment.model_validate(response.json())  # noqa: F405
 
     async def get_purchase_payment(
@@ -1372,13 +1422,15 @@ class AsyncFikenClient:
         )
 
     async def create_purchase_draft(
-        self, company_slug: str, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Create a new purchase draft."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/purchases/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1396,13 +1448,16 @@ class AsyncFikenClient:
         return DraftResult.model_validate(response.json())  # noqa: F405
 
     async def update_purchase_draft(
-        self, company_slug: str, draft_id: int, data: DraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        draft_id: int,
+        data: DraftRequest,  # noqa: F405
     ) -> DraftResult:  # noqa: F405
         """Update a purchase draft."""
         await self._request(
             "PUT",
             f"/companies/{company_slug}/purchases/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_purchase_draft(company_slug, draft_id)
 
@@ -1447,13 +1502,15 @@ class AsyncFikenClient:
         )
 
     async def create_full_credit_note(
-        self, company_slug: str, data: FullCreditNoteRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: FullCreditNoteRequest,  # noqa: F405
     ) -> CreditNoteResult:  # noqa: F405
         """Create a full credit note."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/full",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1462,13 +1519,15 @@ class AsyncFikenClient:
         return CreditNoteResult.model_validate(response.json())  # noqa: F405
 
     async def create_partial_credit_note(
-        self, company_slug: str, data: PartialCreditNoteRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: PartialCreditNoteRequest,  # noqa: F405
     ) -> CreditNoteResult:  # noqa: F405
         """Create a partial credit note."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/partial",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1486,13 +1545,15 @@ class AsyncFikenClient:
         return CreditNoteResult.model_validate(response.json())  # noqa: F405
 
     async def send_credit_note(
-        self, company_slug: str, data: SendCreditNoteRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: SendCreditNoteRequest,  # noqa: F405
     ) -> None:
         """Send a credit note."""
         await self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/send",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
 
     def get_credit_note_drafts(
@@ -1512,13 +1573,15 @@ class AsyncFikenClient:
         )
 
     async def create_credit_note_draft(
-        self, company_slug: str, data: InvoiceishDraftRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: InvoiceishDraftRequest,  # noqa: F405
     ) -> InvoiceishDraftResult:  # noqa: F405
         """Create a new credit note draft."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/creditNotes/drafts",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1545,7 +1608,7 @@ class AsyncFikenClient:
         await self._request(
             "PUT",
             f"/companies/{company_slug}/creditNotes/drafts/{draft_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_credit_note_draft(company_slug, draft_id)
 
@@ -1590,13 +1653,15 @@ class AsyncFikenClient:
         )
 
     async def create_general_journal_entry(
-        self, company_slug: str, data: GeneralJournalEntryRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: GeneralJournalEntryRequest,  # noqa: F405
     ) -> JournalEntry:  # noqa: F405
         """Create a general journal entry."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/generalJournalEntries",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1633,7 +1698,10 @@ class AsyncFikenClient:
     ) -> None:
         """Add an attachment to a journal entry."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         await self._request(
             "POST",
             f"/companies/{company_slug}/journalEntries/{entry_id}/attachments",
@@ -1698,13 +1766,15 @@ class AsyncFikenClient:
         )
 
     async def create_project(
-        self, company_slug: str, data: ProjectRequest  # noqa: F405
+        self,
+        company_slug: str,
+        data: ProjectRequest,  # noqa: F405
     ) -> ProjectResult:  # noqa: F405
         """Create a new project."""
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/projects",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
@@ -1731,7 +1801,7 @@ class AsyncFikenClient:
         await self._request(
             "PATCH",
             f"/companies/{company_slug}/projects/{project_id}",
-            json=data.model_dump(by_alias=True, exclude_none=True, mode='json'),
+            json=data.model_dump(by_alias=True, exclude_none=True, mode="json"),
         )
         return await self.get_project(company_slug, project_id)
 
@@ -1769,7 +1839,10 @@ class AsyncFikenClient:
     ) -> InboxResult:  # noqa: F405
         """Upload a document to inbox."""
         fname, file_obj, content_type = prepare_attachment(file, filename)
-        files = {"file": (fname, file_obj, content_type)}
+        files = {
+            "file": (fname, file_obj, content_type),
+            "filename": (None, fname),
+        }
         response = await self._request(
             "POST",
             f"/companies/{company_slug}/inbox",
