@@ -1,6 +1,6 @@
 [project]
 name = "fikenpy"
-version = "0.1.0"
+version = "0.2.0"
 description = "A modern, type-safe Python library for the Fiken accounting API"
 authors = [
     { name = "gronnmann", email = "barti.mruk@gmail.com" }

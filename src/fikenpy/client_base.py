@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import mimetypes
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, BinaryIO, Generic, Iterator, TypeVar, cast
+from typing import Any, BinaryIO, Generic, TypeVar, cast
 
 import httpx
 from pydantic import BaseModel
@@ -75,7 +76,7 @@ def parse_error_response(response: httpx.Response) -> FikenAPIError:
 def prepare_attachment(
     file: Path | str | BinaryIO,
     filename: str | None = None,
-) -> tuple[str, BinaryIO, str]:
+) -> tuple[str, bytes, str]:
     """Prepare file attachment for upload.
 
     Args:
@@ -83,7 +84,7 @@ def prepare_attachment(
         filename: Optional filename override
 
     Returns:
-        Tuple of (filename, file_obj, content_type)
+        Tuple of (filename, file_bytes, content_type)
     """
     if isinstance(file, (Path, str)):
         file_path = Path(file)
@@ -91,14 +92,25 @@ def prepare_attachment(
             raise FileNotFoundError(f"File not found: {file_path}")
 
         actual_filename = filename or file_path.name
-        file_obj = open(file_path, "rb")
+
+        # Read bytes immediately to avoid async file handle issues
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+
         content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
-        return actual_filename, file_obj, content_type
+        return actual_filename, file_bytes, content_type
     else:
-        # file-like object
+        # file-like object - read into bytes
         actual_filename = filename or "attachment"
-        content_type = "application/octet-stream"
-        return actual_filename, file, content_type
+        if hasattr(file, "read"):
+            file_bytes = file.read()
+        else:
+            # Already bytes
+            file_bytes = file
+        content_type = (
+            mimetypes.guess_type(actual_filename)[0] or "application/octet-stream"
+        )
+        return actual_filename, file_bytes, content_type
 
 
 class PaginatedIterator(Iterator[T]):
@@ -245,7 +257,7 @@ class AsyncPaginatedIterator(Generic[T]):
         if self.index < len(self.items):
             item = self.items[self.index]
             self.index += 1
-            return cast(T, item)
+            return cast("T", item)
 
         # Need to fetch next page
         if self.total_pages is not None and self.current_page >= self.total_pages - 1:
@@ -256,7 +268,7 @@ class AsyncPaginatedIterator(Generic[T]):
         if self.index < len(self.items):
             item = self.items[self.index]
             self.index += 1
-            return cast(T, item)
+            return cast("T", item)
 
         raise StopAsyncIteration
 

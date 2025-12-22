@@ -75,7 +75,6 @@ class AsyncFikenClient:
             base_url=self.base_url,
             timeout=self.timeout,
             headers={
-                "Content-Type": "application/json",
                 "User-Agent": f"FikenPy/{__version__}",
             },
         )
@@ -545,9 +544,9 @@ class AsyncFikenClient:
             file: File to attach
             filename: Optional filename override
         """
-        fname, file_obj, content_type = prepare_attachment(file, filename)
+        fname, file_bytes, content_type = prepare_attachment(file, filename)
         files = {
-            "file": (fname, file_obj, content_type),
+            "file": (fname, file_bytes, content_type),
             "filename": (None, fname),
         }
 
@@ -556,9 +555,6 @@ class AsyncFikenClient:
             f"/companies/{company_slug}/contacts/{contact_id}/attachments",
             files=files,
         )
-
-        if isinstance(file, (Path, str)):
-            file_obj.close()
 
     async def get_contact_persons(
         self, company_slug: str, contact_id: int
@@ -925,9 +921,9 @@ class AsyncFikenClient:
             file: File to attach
             filename: Optional filename override
         """
-        fname, file_obj, content_type = prepare_attachment(file, filename)
+        fname, file_bytes, content_type = prepare_attachment(file, filename)
         files = {
-            "file": (fname, file_obj, content_type),
+            "file": (fname, file_bytes, content_type),
             "filename": (None, fname),
         }
 
@@ -936,9 +932,6 @@ class AsyncFikenClient:
             f"/companies/{company_slug}/invoices/{invoice_id}/attachments",
             files=files,
         )
-
-        if isinstance(file, (Path, str)):
-            file_obj.close()
 
     async def send_invoice(
         self,
@@ -1157,9 +1150,9 @@ class AsyncFikenClient:
         filename: str | None = None,
     ) -> None:
         """Add an attachment to a sale."""
-        fname, file_obj, content_type = prepare_attachment(file, filename)
+        fname, file_bytes, content_type = prepare_attachment(file, filename)
         files = {
-            "file": (fname, file_obj, content_type),
+            "file": (fname, file_bytes, content_type),
             "filename": (None, fname),
         }
         await self._request(
@@ -1167,8 +1160,6 @@ class AsyncFikenClient:
             f"/companies/{company_slug}/sales/{sale_id}/attachments",
             files=files,
         )
-        if isinstance(file, (Path, str)):
-            file_obj.close()
 
     async def get_sale_payments(
         self, company_slug: str, sale_id: int
@@ -1351,20 +1342,31 @@ class AsyncFikenClient:
         purchase_id: int,
         file: Path | str | BinaryIO,
         filename: str | None = None,
+        attach_to_payment: bool = False,
+        attach_to_sale: bool = True,
     ) -> None:
-        """Add an attachment to a purchase."""
-        fname, file_obj, content_type = prepare_attachment(file, filename)
+        """Add an attachment to a purchase.
+
+        Args:
+            company_slug: Company identifier
+            purchase_id: Purchase ID
+            file: File to attach
+            filename: Optional filename override
+            attach_to_payment: True if this attachment documents the payment
+            attach_to_sale: True if this attachment documents the sale (default: True)
+        """
+        fname, file_bytes, content_type = prepare_attachment(file, filename)
         files = {
-            "file": (fname, file_obj, content_type),
+            "file": (fname, file_bytes, content_type),
             "filename": (None, fname),
+            "attachToPayment": (None, str(attach_to_payment).lower()),
+            "attachToSale": (None, str(attach_to_sale).lower()),
         }
         await self._request(
             "POST",
             f"/companies/{company_slug}/purchases/{purchase_id}/attachments",
             files=files,
         )
-        if isinstance(file, (Path, str)):
-            file_obj.close()
 
     async def get_purchase_payments(
         self, company_slug: str, purchase_id: int
@@ -1697,9 +1699,9 @@ class AsyncFikenClient:
         filename: str | None = None,
     ) -> None:
         """Add an attachment to a journal entry."""
-        fname, file_obj, content_type = prepare_attachment(file, filename)
+        fname, file_bytes, content_type = prepare_attachment(file, filename)
         files = {
-            "file": (fname, file_obj, content_type),
+            "file": (fname, file_bytes, content_type),
             "filename": (None, fname),
         }
         await self._request(
@@ -1707,8 +1709,6 @@ class AsyncFikenClient:
             f"/companies/{company_slug}/journalEntries/{entry_id}/attachments",
             files=files,
         )
-        if isinstance(file, (Path, str)):
-            file_obj.close()
 
     # Transaction endpoints
 
@@ -1838,9 +1838,9 @@ class AsyncFikenClient:
         filename: str | None = None,
     ) -> InboxResult:  # noqa: F405
         """Upload a document to inbox."""
-        fname, file_obj, content_type = prepare_attachment(file, filename)
+        fname, file_bytes, content_type = prepare_attachment(file, filename)
         files = {
-            "file": (fname, file_obj, content_type),
+            "file": (fname, file_bytes, content_type),
             "filename": (None, fname),
         }
         response = await self._request(
@@ -1848,8 +1848,6 @@ class AsyncFikenClient:
             f"/companies/{company_slug}/inbox",
             files=files,
         )
-        if isinstance(file, (Path, str)):
-            file_obj.close()
         location = response.headers.get("Location", "")
         if location and response.status_code == 201:
             doc_id = location.split("/")[-1]
@@ -2518,11 +2516,21 @@ class AsyncScopedFikenClient:
         )
 
     async def add_attachment_to_purchase(
-        self, purchase_id: int, file: Path | str | BinaryIO, filename: str | None = None
+        self,
+        purchase_id: int,
+        file: Path | str | BinaryIO,
+        filename: str | None = None,
+        attach_to_payment: bool = False,
+        attach_to_sale: bool = True,
     ) -> None:
         """Add an attachment to a purchase."""
         return await self._client.add_attachment_to_purchase(
-            self.company_slug, purchase_id, file, filename
+            self.company_slug,
+            purchase_id,
+            file,
+            filename,
+            attach_to_payment,
+            attach_to_sale,
         )
 
     async def get_purchase_payments(self, purchase_id: int) -> list[Payment]:
